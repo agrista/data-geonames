@@ -1,9 +1,7 @@
-allCountries.zip
-allCountries.txt
+*.zip
+*.txt
 .idea
 .pyc
+.venv
 *.DS_Store
 environment_variables.sh
-
-# premium data
-airports.txt

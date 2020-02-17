@@ -6,9 +6,30 @@ import sys
 from datetime import datetime
 from tqdm import tqdm
 import time
+import json
 
 csv.field_size_limit(sys.maxsize)
-es = Elasticsearch(urls='http://localhost:9200/', timeout=60, max_retries=2)
+es = Elasticsearch(urls='http://localhost:9200/', timeout=120, max_retries=5)
+
+
+def drop_index():
+    es.indices.delete(index='geonames', ignore=[400, 404])
+
+
+def create_index():
+    if not es.indices.exists(index='geonames'):
+        with open('geonames_mapping.json') as json_file:
+            es.indices.create(index='geonames', body=json.load(json_file), include_type_name=True)
+
+
+def load_data(dataset):
+    f = open(dataset+'.txt', 'rt')
+    row_count = sum(1 for line in f)
+    f.seek(0)
+    reader = csv.reader(f, delimiter='\t')
+    actions = documents(reader, es, row_count)
+    helpers.bulk(es, actions, chunk_size=500)
+    es.indices.refresh(index='geonames')
 
 
 def iso_convert(iso2c):
@@ -83,10 +104,10 @@ def iso_convert(iso2c):
         iso3c = "NA"
         return iso3c
 
-def documents(reader, es):
+def documents(reader, es, row_count):
     todays_date = datetime.today().strftime("%Y-%m-%d")
     count = 0
-    for row in tqdm(reader, total=11741135): # approx
+    for row in tqdm(reader, total=row_count): # approx
         try:
             coords = row[4] + "," + row[5]
             country_code3 = iso_convert(row[8])
@@ -121,11 +142,7 @@ def documents(reader, es):
 
 if __name__ == "__main__":
     t = time.time()
-    f = open('allCountries.txt', 'rt')
-    #f = open('shortcountries.txt', 'rt')
-    reader = csv.reader(f, delimiter='\t')
-    actions = documents(reader, es)
-    helpers.bulk(es, actions, chunk_size=500)
-    es.indices.refresh(index='geonames')
+    create_index()
+    load_data(sys.argv[1])
     e = (time.time() - t) / 60
     print("Elapsed minutes: ", e)
