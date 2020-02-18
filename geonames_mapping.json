@@ -10,7 +10,7 @@
         "name": { "type": "text" },
         "asciiname": { "type": "text" },
         "alternativenames": { "type": "text", "similarity": "boolean" },
-        "coordinates": { "type": "geo_point" },
+        "centroid": { "type": "geo_shape" },
         "feature_class": { "type": "keyword", "index": "true" },
         "feature_code": { "type": "keyword", "index": "true" },
         "country_code2": { "type": "keyword", "index": "true" },

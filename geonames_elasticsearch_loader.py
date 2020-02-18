@@ -107,34 +107,36 @@ def iso_convert(iso2c):
 def documents(reader, es, row_count):
     todays_date = datetime.today().strftime("%Y-%m-%d")
     count = 0
-    for row in tqdm(reader, total=row_count): # approx
+    for row in tqdm(reader, total=row_count):
         try:
-            coords = row[4] + "," + row[5]
-            country_code3 = iso_convert(row[8])
-            doc = {"geonameid" : row[0],
-                    "name" : row[1],
-                    "asciiname" : row[2],
-                    "alternativenames" : row[3].split(","),
-                    "coordinates" : coords,  # 4, 5
-                    "feature_class" : row[6],
-                    "feature_code" : row[7],
-                    "country_code2" : row[8],
-                    "country_code3" : country_code3,
-                    "cc2" : row[9],
-                    "admin1_code" : row[10],
-                    "admin2_code" : row[11],
-                    "admin3_code" : row[12],
-                    "admin4_code" : row[13],
-                    "population" : row[14],
-                    "elevation" : row[15],
-                    "dem" : row[16],
-                    "timezone" :  row[17],
-                    "modification_date" : todays_date
+            geo_shape = {
+                "type": "Point",
+                "coordinates": [float(row[5]), float(row[4])]
+            }
+            doc = {"geonameid": row[0],
+                    "name": row[1],
+                    "asciiname": row[2],
+                    "alternativenames": row[3].split(","),
+                    "centroid": geo_shape,
+                    "feature_class": row[6],
+                    "feature_code": row[7],
+                    "country_code2": row[8],
+                    "country_code3": iso_convert(row[8]),
+                    "cc2": row[9],
+                    "admin1_code": row[10],
+                    "admin2_code": row[11],
+                    "admin3_code": row[12],
+                    "admin4_code": row[13],
+                    "population": row[14],
+                    "elevation": row[15],
+                    "dem": row[16],
+                    "timezone": row[17],
+                    "modification_date": todays_date
                    }
-            action = {"_index" : "geonames",
-                      "_type" : "geoname",
-                      "_id" : doc['geonameid'],
-                      "_source" : doc}
+            action = {"_index": "geonames",
+                      "_type": "geoname",
+                      "_id": doc['geonameid'],
+                      "_source": doc}
             yield action
         except:
             count += 1
